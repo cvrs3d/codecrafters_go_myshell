@@ -20,5 +20,5 @@ func main() {
 	    fmt.Fprint(os.Stdout, "invalid_command: not found\n")
 	}
     usrInput = usrInput[:len(usrInput) - 1]
-	fmt.Fprint(os.Stdout, "%s: not found\n", usrInput)
+	fmt.Fprintf(os.Stdout, "%s: not found\n", usrInput)
 }
