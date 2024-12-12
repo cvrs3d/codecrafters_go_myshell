@@ -27,6 +27,12 @@ func main() {
         if usrInput == "exit 0"{
             break
         }
+
+        if strings.HasPrefix(usrInput, "echo ") {
+            fmt.Fprintf(os.Stdout,"%s\n", usrInput[5:])
+            continue
+        }
+
         fmt.Fprintf(os.Stdout, "%s: not found\n", usrInput)
 	}
 }
