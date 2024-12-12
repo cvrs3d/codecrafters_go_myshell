@@ -131,7 +131,7 @@ func main() {
         }
 
         if err := executeCommand(usrInput); err != nil {
-            fmt.Fprintf(os.Stdout, "%s\n", err.Error())
+            fmt.Fprintf(os.Stdout, "%s", err)
         }
 	}
 }
