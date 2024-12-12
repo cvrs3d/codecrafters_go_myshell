@@ -16,6 +16,7 @@ func isBuiltin(command string) bool {
         "echo": true,
         "type": true,
         "exit": true,
+        "pwd": true,
     }
     return builtins[command]
 }
@@ -95,6 +96,17 @@ func executeCommand(input string) error {
     return nil
 }
 
+// Handle the pwd builtin
+func handlePwd() error {
+    currentDir, err := os.Getwd()
+
+    if err != nil {
+        return fmt.Errorf("pwd: %v", err)
+    }
+    fmt.Println(currentDir)
+    return nil
+}
+
 func main() {
 
 
@@ -102,7 +114,10 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 
     for {
+        // $$$$$$$
         fmt.Fprint(os.Stdout, "$ ")
+
+        // Reading users input
         usrInput, err := reader.ReadString('\n')
         if err != nil {
             fmt.Fprint(os.Stdout, "invalid_command: not found\n")
@@ -111,10 +126,12 @@ func main() {
 
         usrInput = strings.TrimSpace(usrInput)
 
+        // If exit
         if usrInput == "exit 0"{
             break
         }
 
+        // Command type
         if strings.HasPrefix(usrInput, "type ") {
             err := handleTypeCmd(usrInput)
             if err == nil {
@@ -125,11 +142,21 @@ func main() {
             }
         }
 
+        // Command echo
         if strings.HasPrefix(usrInput, "echo ") {
             fmt.Fprintf(os.Stdout,"%s\n", usrInput[5:])
             continue
         }
 
+        // Command pwd
+        if usrInput == "pwd" {
+            if err := handlePwd(); err != nil {
+                fmt.Fprintf(os.Stdout, "%s\n", err.Error())
+            }
+            continue
+        }
+
+        // Any other
         if err := executeCommand(usrInput); err != nil {
             fmt.Fprintf(os.Stdout, "%s", err)
         }
