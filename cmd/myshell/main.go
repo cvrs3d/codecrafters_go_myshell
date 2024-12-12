@@ -40,7 +40,7 @@ func findCommandInPath(command string) (string, error) {
         }
     }
 
-    return "", errors.New(fmt.Sprintf("type: %s: not found", command))
+    return "", errors.New(fmt.Sprintf("%s: not found", command))
 }
 
 // Parse type <command>
@@ -91,6 +91,8 @@ func main() {
             err := handleTypeCmd(usrInput)
             if err == nil {
                 continue
+            } else {
+                fmt.Frpint(os.Stdout, err)
             }
         }
 
