@@ -92,7 +92,7 @@ func main() {
             if err == nil {
                 continue
             } else {
-                fmt.Frpint(os.Stdout, err)
+                fmt.Fprint(os.Stdout, err)
             }
         }
 
