@@ -6,9 +6,10 @@ import (
 	"os"
 	"strings"
 	"errors"
+	"path/filepath"
 )
 
-// type command
+// Checks if command is a builtin
 func isBuiltin(command string) bool {
     builtins := map[string]bool{
         "echo": true,
@@ -16,6 +17,30 @@ func isBuiltin(command string) bool {
         "exit": true,
     }
     return builtins[command]
+}
+
+// Scans the PATH
+func findCommandInPath(command string) (string, error) {
+    pathEnv, exists := os.LookupEnv("PATH")
+
+    if !exists || pathEnv == "" {
+        return "", errors.New("type: PATH env var not found")
+    }
+
+    paths := strings.Split(pathEnv, string(os.PathListSeparator))
+
+    // We search for certain command
+    for _, dir := range paths {
+        fullPath := filepath.Join(dir, command)
+
+        if fileInfo, err := os.Stat(fullPath); err == nil {
+            if !fileInfo.IsDir() {
+                return fullPath, nil
+            }
+        }
+    }
+
+    return "", errors.New(fmt.Sprintf("type: %s: not found", command))
 }
 
 // Parse type <command>
@@ -29,9 +54,16 @@ func handleTypeCmd(input string) error {
 
     if isBuiltin(command) {
         fmt.Fprintf(os.Stdout, "%s is a shell builtin\n", command)
-    } else {
-        fmt.Fprintf(os.Stdout, "%s: not found\n", command)
+        return nil
     }
+
+    path, err := findCommandInPath(command)
+    if err != nil {
+        return err
+    }
+
+    // If command is found
+    fmt.Fprintf(os.Stdout, "%s is %s\n", command, path)
     return nil
 }
 
