@@ -28,9 +28,9 @@ func handleTypeCmd(input string) error {
     command := parts[1]
 
     if isBuiltin(command) {
-        fmt.Fprintf(os.Stdout, "%s is a shell builtin\n")
+        fmt.Fprintf(os.Stdout, "%s is a shell builtin\n", command)
     } else {
-        fmt.Fprintf(os.Stdout, "%s: not found\n")
+        fmt.Fprintf(os.Stdout, "%s: not found\n", command)
     }
     return nil
 }
