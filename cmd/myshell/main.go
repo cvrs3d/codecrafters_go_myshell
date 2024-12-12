@@ -67,6 +67,33 @@ func handleTypeCmd(input string) error {
     return nil
 }
 
+// Executes new command
+func executeCommand(input string) error {
+    args := strings.Fields(input)
+    if len(args) == 0 {
+        return errors.New("no command provided")
+    }
+
+    command := args[0]
+    path, err := findCommandInPath(command)
+    if err != nil {
+        return err
+    }
+
+    cmd := exec.Command(path, args[1:]...)
+
+    // Redirecting channels
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    cmd.Stdin = os.Stdin
+
+    if err := cmd.Run(); err != nil {
+        return fmt.Errorf("%s : %v", command, err)
+    }
+
+    return nil
+}
+
 func main() {
 
 
@@ -102,6 +129,8 @@ func main() {
             continue
         }
 
-        fmt.Fprintf(os.Stdout, "%s: not found\n", usrInput)
+        if err := executeCommand(usrInput); err != nil {
+            fmt.Fprintf(os.Stdout, "%s\n", err.Error())
+        }
 	}
 }
