@@ -93,6 +93,7 @@ func main() {
                 continue
             } else {
                 fmt.Fprint(os.Stdout, err)
+                continue
             }
         }
 
