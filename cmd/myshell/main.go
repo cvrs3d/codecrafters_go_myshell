@@ -26,6 +26,7 @@ func main() {
         usrInput = strings.TrimSpace(usrInput)
         if usrInput == "exit 0"{
             break
+        }
         fmt.Fprintf(os.Stdout, "%s: not found\n", usrInput)
 	}
 }
