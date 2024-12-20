@@ -90,7 +90,7 @@ func executeCommand(input string) error {
     cmd.Stdin = os.Stdin
 
     if err := cmd.Run(); err != nil {
-        return fmt.Errorf("%s : %v", command, err)
+        return fmt.Errorf("%s: command not found", command)
     }
 
     return nil
