@@ -107,6 +107,23 @@ func handlePwd() error {
     return nil
 }
 
+// Handle CD
+func handleCd(input string) error {
+    parts := strings.Fields(input)
+
+    if len(parts) < 2 {
+        return errors.New("cd: missing operand")
+    }
+
+    path := parts[1]
+
+    if err := os.Chdir(path); err != nil {
+        return fmt.Errorf("cd: %v", err)
+    }
+
+    return nil
+}
+
 func main() {
 
 
@@ -152,6 +169,13 @@ func main() {
         if usrInput == "pwd" {
             if err := handlePwd(); err != nil {
                 fmt.Fprintf(os.Stdout, "%s\n", err.Error())
+            }
+            continue
+        }
+
+        if strings.HasPrefix(usrInput, "cd ") {
+            if err := handleCd(usrInput); err != nil {
+                fmt.Fprintln(os.Stdout, err)
             }
             continue
         }
