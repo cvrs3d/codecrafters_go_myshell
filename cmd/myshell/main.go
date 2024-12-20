@@ -61,7 +61,7 @@ func handleTypeCmd(input string) error {
 
     path, err := findCommandInPath(command)
     if err != nil {
-        return Errorf("%s: not found", command)
+        return fmt.Errorf("%s: not found", command)
     }
 
     // If command is found
