@@ -154,7 +154,7 @@ func main() {
             if err == nil {
                 continue
             } else {
-                fmt.Fprint(os.Stdout, err)
+                fmt.Fprintln(os.Stdout, err)
                 continue
             }
         }
