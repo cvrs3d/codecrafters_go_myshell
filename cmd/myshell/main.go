@@ -118,7 +118,7 @@ func handleCd(input string) error {
     path := parts[1]
 
     if err := os.Chdir(path); err != nil {
-        return fmt.Errorf("cd: %v", err.Error()[len("chdir"):])
+        return fmt.Errorf("cd: %v", err.Error()[len("chdir "):])
     }
 
     return nil
