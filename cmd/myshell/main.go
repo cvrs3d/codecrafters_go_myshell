@@ -79,7 +79,7 @@ func executeCommand(input string) error {
     command := args[0]
     path, err := findCommandInPath(command)
     if err != nil {
-        return err
+        return fmt.Errorf("%s: command not found", command)
     }
 
     cmd := exec.Command(path, args[1:]...)
