@@ -42,7 +42,7 @@ func findCommandInPath(command string) (string, error) {
         }
     }
 
-    return "", errors.New(fmt.Sprintf("%s: not found\n", command))
+    return "", errors.New(fmt.Sprintf("%s: command not found\n", command))
 }
 
 // Parse type <command>
