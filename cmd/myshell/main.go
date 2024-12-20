@@ -111,11 +111,17 @@ func handlePwd() error {
 func handleCd(input string) error {
     parts := strings.Fields(input)
 
-    if len(parts) < 2 {
-        return errors.New("cd: missing operand")
-    }
+    var path string
 
-    path := parts[1]
+    if len(parts) == 1 || parts[1] == '~' {
+        homeDir, err := os.UserHomeDir()
+        if err != nil {
+            return fmt.Errorf("cd: could not get home directory: %v", err)
+        }
+        path = homeDir
+    } else {
+        path = parts[1]
+    }
 
     if err := os.Chdir(path); err != nil {
         return fmt.Errorf("cd: %s: No such file or directory", path)
