@@ -195,7 +195,7 @@ func handleCat(args []string) error {
 
         result.Write(content)
     }
-    fmt.Fprintln(os.Stdout, result.String())
+    fmt.Fprint(os.Stdout, result.String())
     return nil
 }
 
