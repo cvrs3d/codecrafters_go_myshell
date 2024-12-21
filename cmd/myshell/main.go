@@ -182,7 +182,7 @@ func handleCat(args []string) error {
         if err != nil {
             return fmt.Errorf("cat: cannot open '%s': %v", filename, err)
         }
-        file.Close()
+        defer file.Close()
 
         scanner := bufio.NewScanner(file)
         for scanner.Scan() {
