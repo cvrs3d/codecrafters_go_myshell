@@ -50,7 +50,6 @@ func isBuiltin(command string) bool {
         "exit": true,
         "pwd": true,
         "cd": true,
-        "cat": true,
     }
     return builtins[command]
 }
