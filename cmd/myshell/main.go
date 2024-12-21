@@ -8,6 +8,7 @@ import (
 	"strings"
 	"errors"
 	"path/filepath"
+	"io"
 )
 
 // parseInput handles input string and works with ''
