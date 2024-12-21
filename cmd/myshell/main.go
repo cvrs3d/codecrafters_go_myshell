@@ -80,13 +80,12 @@ func findCommandInPath(command string) (string, error) {
 }
 
 // Parse type <command>
-func handleTypeCmd(input string) error {
-    parts := strings.SplitN(input, " ", 2)
-    if len(parts) != 2 {
+func handleTypeCmd(args []string) error {
+    if len(args) != 1 {
         return errors.New("type: missing operand")
     }
 
-    command := parts[1]
+    command := args[0]
 
     if isBuiltin(command) {
         fmt.Fprintf(os.Stdout, "%s is a shell builtin\n", command)
@@ -238,7 +237,7 @@ func main() {
 
         switch command {
         case "type":
-            if err := handleTypeCmd(strings.Join(args, " ")); err != nil {
+            if err := handleTypeCmd(args); err != nil {
                 fmt.Fprintln(os.Stdout, err)
             }
         case "echo":
