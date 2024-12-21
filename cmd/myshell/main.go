@@ -10,6 +10,37 @@ import (
 	"path/filepath"
 )
 
+// parseInput handles input string and works with ''
+func parseInput(input string) ([]string, error) {
+    var args []string
+    var currentArg strings.Builder
+    inSingleQuote := false
+
+    for _, char := range input {
+        switch {
+        case char == '\'':
+            inSingleQuote = !inSingleQuote
+        case char == ' ' && !inSingleQuote:
+            if currentArg.Len() > 0 {
+                args = append(args, currentArg.String())
+                currentArg.Reset()
+            }
+        default:
+            currentArg.WriteRune(char)
+        }
+    }
+
+    if inSingleQuote {
+        return nil, errors.New("unmatched single quote in input")
+    }
+
+    if currentArg.Len() > 0 {
+        args = append(args, currentArg.String())
+    }
+
+    return args, nil
+}
+
 // Checks if command is a builtin
 func isBuiltin(command string) bool {
     builtins := map[string]bool{
@@ -17,6 +48,8 @@ func isBuiltin(command string) bool {
         "type": true,
         "exit": true,
         "pwd": true,
+        "cd": true,
+        "cat": true,
     }
     return builtins[command]
 }
@@ -130,6 +163,38 @@ func handleCd(input string) error {
     return nil
 }
 
+// handleEcho works with echo
+func handleEcho(args []string) {
+	if len(args) > 0 {
+		// Print joined args space-separated
+		fmt.Println(strings.Join(args, " "))
+	}
+}
+
+// handleCat stands for cat builtin
+func handleCat(args []string) error {
+    if len(args) == 0 {
+        return errors.New("cat: missing file operand")
+    }
+
+    for _, filename := range args {
+        file, err := os.Open(filename)
+        if err != nil {
+            return fmt.Errorf("cat: cannot open '%s': %v", filename, err)
+        }
+        file.Close()
+
+        scanner := bufio.NewScanner(file)
+        for scanner.Scan() {
+            fmt.Println(scanner.Text())
+        }
+        if err := scanner.Err(); err != nil {
+            return fmt.Errorf("cat: error reading '%s': %v", filename, err)
+        }
+    }
+    return nil
+}
+
 func main() {
 
 
@@ -154,41 +219,42 @@ func main() {
             break
         }
 
-        // Command type
-        if strings.HasPrefix(usrInput, "type ") {
-            err := handleTypeCmd(usrInput)
-            if err == nil {
-                continue
-            } else {
-                fmt.Fprintln(os.Stdout, err)
-                continue
-            }
-        }
-
-        // Command echo
-        if strings.HasPrefix(usrInput, "echo ") {
-            fmt.Fprintf(os.Stdout,"%s\n", usrInput[5:])
+        args, err := parseInput(usrInput)
+        if err != nil {
+            fmt.Println(err)
             continue
         }
 
-        // Command pwd
-        if usrInput == "pwd" {
+        if len(args) == 0 {
+            continue
+        }
+
+        command := args[0]
+        args = args[1:]
+
+        switch command {
+        case "type":
+            if err := handleTypeCmd(strings.Join(args, " ")); err != nil {
+                fmt.Fprintln(os.Stdout, err)
+            }
+        case "echo":
+            handleEcho(args)
+        case "cat":
+            if err := handleCat(args); err != nil {
+				fmt.Println(err)
+			}
+        case "pwd":
             if err := handlePwd(); err != nil {
                 fmt.Fprintf(os.Stdout, "%s\n", err.Error())
             }
-            continue
-        }
-
-        if strings.HasPrefix(usrInput, "cd ") {
+        case "cd":
             if err := handleCd(usrInput); err != nil {
                 fmt.Fprintln(os.Stdout, err)
             }
-            continue
-        }
-
-        // Any other
-        if err := executeCommand(usrInput); err != nil {
+        default:
+            if err := executeCommand(usrInput); err != nil {
             fmt.Fprintln(os.Stdout, err)
+            }
         }
 	}
 }
