@@ -177,21 +177,24 @@ func handleCat(args []string) error {
         return errors.New("cat: missing file operand")
     }
 
+    var result strings.Builder
+
     for _, filename := range args {
         file, err := os.Open(filename)
         if err != nil {
             return fmt.Errorf("cat: cannot open '%s': %v", filename, err)
         }
-        defer file.Close()
 
-        scanner := bufio.NewScanner(file)
-        for scanner.Scan() {
-            fmt.Println(scanner.Text())
-        }
-        if err := scanner.Err(); err != nil {
+        content, err := io.ReadAll(file)
+        if err != nil {
+            file.Close()
             return fmt.Errorf("cat: error reading '%s': %v", filename, err)
         }
+        file.Close()
+
+        result.Write(content)
     }
+    fmt.Fprintln(os.Stdout, result.String())
     return nil
 }
 
