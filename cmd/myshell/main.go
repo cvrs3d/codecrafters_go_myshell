@@ -21,7 +21,7 @@ func parseInput(input string) ([]string, error) {
 
     for _, char := range input {
         if escapeNext {
-            if inDoubleQuote && (char == '"' || char == '\\' || char == '$' || char == 'n') {
+            if inDoubleQuote && (char == '"' || char == '\\' || char == '$' || char == '\n') {
                 currentArg.WriteRune(char)
             } else if !inDoubleQuote {
                 currentArg.WriteRune(char)
