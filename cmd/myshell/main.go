@@ -21,13 +21,20 @@ func parseInput(input string) ([]string, error) {
 
     for _, char := range input {
         if escapeNext {
-            currentArg.WriteRune(char)
+            if inDoubleQuote && (char == '"' || char == '\\' || char == '$' || char == 'n') {
+                currentArg.WriteRune(char)
+            } else if !inDoubleQuote {
+                currentArg.WriteRune(char)
+            } else {
+                currentArg.WriteRune('\\')
+                currentArg.WriteRune(char)
+            }
             escapeNext = false
             continue
         }
         switch {
         case char == '\\':
-            if !inSingleQuote && !inDoubleQuote {
+            if !inSingleQuote {
                 escapeNext = true
             } else {
                 currentArg.WriteRune(char)
