@@ -132,8 +132,7 @@ func handleTypeCmd(args []string) error {
 }
 
 // Executes new command
-func executeCommand(input string) error {
-    args := strings.Fields(input)
+func executeCommand(args []string) error {
     if len(args) == 0 {
         return errors.New("no command provided")
     }
@@ -284,7 +283,7 @@ func main() {
                 fmt.Fprintln(os.Stdout, err)
             }
         default:
-            if err := executeCommand(usrInput); err != nil {
+            if err := executeCommand(append([]string{command}, args...)); err != nil {
             fmt.Fprintln(os.Stdout, err)
             }
         }
