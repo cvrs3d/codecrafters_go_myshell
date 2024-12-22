@@ -27,7 +27,11 @@ func parseInput(input string) ([]string, error) {
         }
         switch {
         case char == '\\':
-            escapeNext = true
+            if !inSingleQuote && !inDoubleQuote {
+                escapeNext = true
+            } else {
+                currentArg.WriteRune(char)
+            }
         case char == '\'':
             if !inDoubleQuote {
                 inSingleQuote = !inSingleQuote
