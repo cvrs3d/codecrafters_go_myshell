@@ -17,9 +17,17 @@ func parseInput(input string) ([]string, error) {
     var currentArg strings.Builder
     inSingleQuote := false
     inDoubleQuote := false
+    escapeNext := false
 
     for _, char := range input {
+        if escapeNext {
+            currentArg.WriteRune(char)
+            escapeNext = false
+            continue
+        }
         switch {
+        case char == '\\':
+            escapeNext = true
         case char == '\'':
             if !inDoubleQuote {
                 inSingleQuote = !inSingleQuote
