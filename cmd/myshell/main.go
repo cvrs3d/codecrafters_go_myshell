@@ -16,12 +16,23 @@ func parseInput(input string) ([]string, error) {
     var args []string
     var currentArg strings.Builder
     inSingleQuote := false
+    inDoubleQuote := false
 
     for _, char := range input {
         switch {
         case char == '\'':
-            inSingleQuote = !inSingleQuote
-        case char == ' ' && !inSingleQuote:
+            if !inDoubleQuote {
+                inSingleQuote = !inSingleQuote
+            } else {
+                currentArg.WriteRune(char)
+            }
+        case char == '"':
+            if !inSingleQuote {
+                inDoubleQuote = !inDoubleQuote
+            } else {
+                currentArg.WriteRune(char)
+            }
+        case char == ' ' && !inSingleQuote && !inDoubleQuote:
             if currentArg.Len() > 0 {
                 args = append(args, currentArg.String())
                 currentArg.Reset()
@@ -31,8 +42,8 @@ func parseInput(input string) ([]string, error) {
         }
     }
 
-    if inSingleQuote {
-        return nil, errors.New("unmatched single quote in input")
+    if inSingleQuote || inDoubleQuote {
+        return nil, errors.New("parse error: mismatched quotes")
     }
 
     if currentArg.Len() > 0 {
