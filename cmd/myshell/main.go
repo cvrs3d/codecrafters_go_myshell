@@ -1,14 +1,14 @@
 package main
 
 import (
-	"bufio"
-	"errors"
-	"fmt"
-	"io"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
+    "bufio"
+    "errors"
+    "fmt"
+    "io"
+    "os"
+    "os/exec"
+    "path/filepath"
+    "strings"
 )
 
 // parseInput handles input string and works with ''
@@ -93,8 +93,8 @@ func isBuiltin(command string) bool {
         "echo": true,
         "type": true,
         "exit": true,
-        "pwd": true,
-        "cd": true,
+        "pwd":  true,
+        "cd":   true,
     }
     return builtins[command]
 }
@@ -113,10 +113,8 @@ func findCommandInPath(command string) (string, error) {
     for _, dir := range paths {
         fullPath := filepath.Join(dir, command)
 
-        if fileInfo, err := os.Stat(fullPath); err == nil {
-            if !fileInfo.IsDir() {
-                return fullPath, nil
-            }
+        if fileInfo, err := os.Stat(fullPath); err == nil && !fileInfo.IsDir() {
+            return fullPath, nil
         }
     }
 
@@ -180,7 +178,6 @@ func executeCommand(args []string, redirects map[string]string) error {
 // Handle the pwd builtin
 func handlePwd() error {
     currentDir, err := os.Getwd()
-
     if err != nil {
         return fmt.Errorf("pwd: %v", err)
     }
@@ -205,7 +202,7 @@ func handleCd(input string) error {
     }
 
     if err := os.Chdir(path); err != nil {
-        return fmt.Errorf("cd: %s: No such file or directory", path)
+        return fmt.Errorf("cd: %v", err)
     }
 
     return nil
@@ -213,10 +210,10 @@ func handleCd(input string) error {
 
 // handleEcho works with echo
 func handleEcho(args []string) {
-	if len(args) > 0 {
-		// Print joined args space-separated
-		fmt.Println(strings.Join(args, " "))
-	}
+    if len(args) > 0 {
+        // Print joined args space-separated
+        fmt.Println(strings.Join(args, " "))
+    }
 }
 
 // handleCat stands for cat builtin
@@ -230,13 +227,13 @@ func handleCat(args []string) error {
     for _, filename := range args {
         file, err := os.Open(filename)
         if err != nil {
-            return fmt.Errorf("cat: cannot open '%s': %v", filename, err)
+            return fmt.Errorf("cat: %v", err)
         }
 
         content, err := io.ReadAll(file)
         if err != nil {
             file.Close()
-            return fmt.Errorf("cat: error reading '%s': %v", filename, err)
+            return fmt.Errorf("cat: %v", err)
         }
         file.Close()
 
@@ -247,16 +244,11 @@ func handleCat(args []string) error {
 }
 
 func main() {
-
-
-	// Wait for user input
-	reader := bufio.NewReader(os.Stdin)
+    reader := bufio.NewReader(os.Stdin)
 
     for {
-        // $$$$$$$
         fmt.Fprint(os.Stdout, "$ ")
 
-        // Reading users input
         usrInput, err := reader.ReadString('\n')
         if err != nil {
             fmt.Fprint(os.Stdout, "invalid_command: not found\n")
@@ -265,8 +257,7 @@ func main() {
 
         usrInput = strings.TrimSpace(usrInput)
 
-        // If exit
-        if usrInput == "exit 0"{
+        if usrInput == "exit 0" {
             break
         }
 
@@ -285,27 +276,21 @@ func main() {
 
         switch command {
         case "type":
-            if err := handleTypeCmd(args); err != nil {
-                fmt.Fprintln(os.Stdout, err)
-            }
+            err = handleTypeCmd(args)
         case "echo":
             handleEcho(args)
         case "cat":
-            if err := handleCat(args); err != nil {
-				fmt.Println(err)
-			}
+            err = handleCat(args)
         case "pwd":
-            if err := handlePwd(); err != nil {
-                fmt.Fprintf(os.Stdout, "%s\n", err.Error())
-            }
+            err = handlePwd()
         case "cd":
-            if err := handleCd(usrInput); err != nil {
-                fmt.Fprintln(os.Stdout, err)
-            }
+            err = handleCd(usrInput)
         default:
-            if err := executeCommand(append([]string{command}, args...), redirects); err != nil {
-            fmt.Fprintln(os.Stdout, err)
-            }
+            err = executeCommand(append([]string{command}, args...), redirects)
         }
-	}
+
+        if err != nil {
+            fmt.Println(err)
+        }
+    }
 }
