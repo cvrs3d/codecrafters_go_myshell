@@ -65,7 +65,12 @@ func parseInput(input string) ([]string, map[string]string, error) {
         case ' ':
             if !inSingleQuote && !inDoubleQuote {
                 if currentArg.Len() > 0 {
-                    args = append(args, currentArg.String())
+                    arg := currentArg.String()
+                    if len(arg) > 1 && arg[len(arg)-2:] == "1>" {
+                        redirects["stdout"] = strings.TrimSpace(arg[:len(arg)-2])
+                    } else {
+                        args = append(args, arg)
+                    }
                     currentArg.Reset()
                 }
             } else {
@@ -86,6 +91,7 @@ func parseInput(input string) ([]string, map[string]string, error) {
 
     return args, redirects, nil
 }
+
 // Checks if command is a builtin
 func isBuiltin(command string) bool {
     builtins := map[string]bool{
