@@ -70,19 +70,17 @@ func parseInput(input string) ([]string, map[string]string, error) {
                 currentArg.WriteByte(char)
             }
         case '2':
-            if !inSingleQuote && !inDoubleQuote && i+1 < len(input) && (input[i+1] == '>' || input[i+1] == '>>') {
+            if !inSingleQuote && !inDoubleQuote && i+1 < len(input) && (input[i+1] == '>') {
                 if currentArg.Len() > 0 {
                     args = append(args, currentArg.String())
                     currentArg.Reset()
                 }
-                if input[i+1] == '>' {
-                    if i+2 < len(input) && input[i+2] == '>' {
-                        i += 2
-                        redirects["stderr_append"] = strings.TrimSpace(input[i+1:])
-                    } else {
-                        i++
-                        redirects["stderr"] = strings.TrimSpace(input[i+1:])
-                    }
+                if i+2 < len(input) && input[i+2] == '>' {
+                    i += 2
+                    redirects["stderr_append"] = strings.TrimSpace(input[i+1:])
+                } else {
+                    i++
+                    redirects["stderr"] = strings.TrimSpace(input[i+1:])
                 }
                 return args, redirects, nil
             } else {
