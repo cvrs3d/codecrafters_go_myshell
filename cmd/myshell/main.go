@@ -167,7 +167,7 @@ func executeCommand(args []string, redirects map[string]string) error {
     cmd.Stdin = os.Stdin
 
     if outFile, ok := redirects["stdout"]; ok {
-        out, err := os.Open(outFile)
+        out, err := os.Create(outFile)
         if err != nil {
             return fmt.Errorf("failed to open stdout file: %v", err)
         }
@@ -176,7 +176,7 @@ func executeCommand(args []string, redirects map[string]string) error {
     }
 
     if errFile, ok := redirects["stderr"]; ok {
-        errOut, err := os.Open(errFile)
+        errOut, err := os.Create(errFile)
         if err != nil {
             return fmt.Errorf("failed to open stderr file: %v", err)
         }
