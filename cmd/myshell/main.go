@@ -20,58 +20,76 @@ func parseInput(input string) ([]string, map[string]string, error) {
     escapeNext := false
     redirects := make(map[string]string)
 
-    for i, char := range input {
+    for i := 0; i < len(input); i++ {
+        char := input[i]
+
         if escapeNext {
-            if inDoubleQuote && (char == '"' || char == '\\' || char == '$' || char == '\n') {
-                currentArg.WriteRune(char)
-            } else if !inDoubleQuote {
-                currentArg.WriteRune(char)
-            } else {
-                currentArg.WriteRune('\\')
-                currentArg.WriteRune(char)
-            }
+            currentArg.WriteByte(char)
             escapeNext = false
             continue
         }
 
-        switch {
-        case char == '\\':
-            if !inSingleQuote {
-                escapeNext = true
-            } else {
-                currentArg.WriteRune(char)
-            }
-        case char == '\'':
+        switch char {
+        case '\\':
+            escapeNext = true
+        case '\'':
             if !inDoubleQuote {
                 inSingleQuote = !inSingleQuote
             } else {
-                currentArg.WriteRune(char)
+                currentArg.WriteByte(char)
             }
-        case char == '"':
+        case '"':
             if !inSingleQuote {
                 inDoubleQuote = !inDoubleQuote
             } else {
-                currentArg.WriteRune(char)
+                currentArg.WriteByte(char)
             }
-        case char == ' ' && !inSingleQuote && !inDoubleQuote:
-            if currentArg.Len() > 0 {
-                args = append(args, currentArg.String())
-                currentArg.Reset()
-            }
-        case char == '>':
-            if currentArg.Len() > 0 {
-                args = append(args, currentArg.String())
-                currentArg.Reset()
-            }
-            if i+1 < len(input) && input[i+1] == '1' {
-                redirects["stdout"] = strings.TrimSpace(input[i+2:])
-            } else if i+1 < len(input) && input[i+1] == '2' {
-                redirects["stderr"] = strings.TrimSpace(input[i+2:])
+        case ' ':
+            if !inSingleQuote && !inDoubleQuote {
+                if currentArg.Len() > 0 {
+                    args = append(args, currentArg.String())
+                    currentArg.Reset()
+                }
             } else {
-                redirects["stdout"] = strings.TrimSpace(input[i+1:])
+                currentArg.WriteByte(char)
+            }
+        case '>':
+            if !inSingleQuote && !inDoubleQuote {
+                if currentArg.Len() > 0 {
+                    args = append(args, currentArg.String())
+                    currentArg.Reset()
+                }
+                if i+1 < len(input) && input[i+1] == '>' {
+                    i++
+                    redirects["stdout_append"] = strings.TrimSpace(input[i+1:])
+                } else {
+                    redirects["stdout"] = strings.TrimSpace(input[i+1:])
+                }
+                return args, redirects, nil
+            } else {
+                currentArg.WriteByte(char)
+            }
+        case '2':
+            if !inSingleQuote && !inDoubleQuote && i+1 < len(input) && (input[i+1] == '>' || input[i+1] == '>>') {
+                if currentArg.Len() > 0 {
+                    args = append(args, currentArg.String())
+                    currentArg.Reset()
+                }
+                if input[i+1] == '>' {
+                    if i+2 < len(input) && input[i+2] == '>' {
+                        i += 2
+                        redirects["stderr_append"] = strings.TrimSpace(input[i+1:])
+                    } else {
+                        i++
+                        redirects["stderr"] = strings.TrimSpace(input[i+1:])
+                    }
+                }
+                return args, redirects, nil
+            } else {
+                currentArg.WriteByte(char)
             }
         default:
-            currentArg.WriteRune(char)
+            currentArg.WriteByte(char)
         }
     }
 
@@ -159,7 +177,7 @@ func executeCommand(args []string, redirects map[string]string) error {
 
     cmd := exec.Command(path, args[1:]...)
 
-    // Handle redirections
+    // Handle stdout redirection
     if stdoutFile, ok := redirects["stdout"]; ok {
         file, err := os.OpenFile(stdoutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
         if err != nil {
@@ -167,10 +185,25 @@ func executeCommand(args []string, redirects map[string]string) error {
         }
         defer file.Close()
         cmd.Stdout = file
+    } else if stdoutFile, ok := redirects["stdout_append"]; ok {
+        file, err := os.OpenFile(stdoutFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+        if err != nil {
+            return fmt.Errorf("failed to open file for stdout redirection: %v", err)
+        }
+        defer file.Close()
+        cmd.Stdout = file
     }
 
+    // Handle stderr redirection
     if stderrFile, ok := redirects["stderr"]; ok {
         file, err := os.OpenFile(stderrFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+        if err != nil {
+            return fmt.Errorf("failed to open file for stderr redirection: %v", err)
+        }
+        defer file.Close()
+        cmd.Stderr = file
+    } else if stderrFile, ok := redirects["stderr_append"]; ok {
+        file, err := os.OpenFile(stderrFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
         if err != nil {
             return fmt.Errorf("failed to open file for stderr redirection: %v", err)
         }
