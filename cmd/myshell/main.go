@@ -148,33 +148,33 @@ func handleTypeCmd(args []string) error {
 
 // Executes new command
 func executeCommand(args []string, redirects map[string]string) error {
-	if len(args) == 0 {
-		return errors.New("no command provided")
-	}
+    if len(args) == 0 {
+        return errors.New("no command provided")
+    }
 
-	command := args[0]
-	cmd := exec.Command(command, args[1:]...)
+    command := args[0]
+    cmd := exec.Command(command, args[1:]...)
 
-	// Handle stdout redirection
-	if stdoutFile, ok := redirects["stdout"]; ok {
-		file, err := os.OpenFile(stdoutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-		if err != nil {
-			return fmt.Errorf("failed to open file for stdout redirection: %v", err)
-		}
-		defer file.Close()
-		cmd.Stdout = file
-	} else {
-		cmd.Stdout = os.Stdout
-	}
+    // Handle stdout redirection
+    if stdoutFile, ok := redirects["stdout"]; ok {
+        file, err := os.OpenFile(stdoutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+        if err != nil {
+            return fmt.Errorf("failed to open file for stdout redirection: %v", err)
+        }
+        defer file.Close()
+        cmd.Stdout = file
+    } else {
+        cmd.Stdout = os.Stdout
+    }
 
-	// Handle stderr redirection
-	cmd.Stderr = os.Stderr
+    // Handle stderr redirection
+    cmd.Stderr = os.Stderr
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("command execution failed: %v", err)
-	}
+    if err := cmd.Run(); err != nil {
+        return fmt.Errorf("command execution failed: %v", err)
+    }
 
-	return nil
+    return nil
 }
 
 // Handle the pwd builtin
