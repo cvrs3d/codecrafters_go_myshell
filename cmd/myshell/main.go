@@ -62,13 +62,13 @@ func parseInput(input string) ([]string, map[string]string, error) {
                 if i > 0 && input[i-1] == '1' {
                     if i+1 < len(input) && input[i+1] == '>' {
                         i++
-                        redirects["stdout_append"] = strings.TrimSpace(input[i+1:])
+                        redirects["stdout_append"] = strings.TrimSpace(input[i+2:])
                     } else {
                         redirects["stdout"] = strings.TrimSpace(input[i+1:])
                     }
                 } else if i+1 < len(input) && input[i+1] == '>' {
                     i++
-                    redirects["stdout_append"] = strings.TrimSpace(input[i+1:])
+                    redirects["stdout_append"] = strings.TrimSpace(input[i+2:])
                 } else {
                     redirects["stdout"] = strings.TrimSpace(input[i+1:])
                 }
