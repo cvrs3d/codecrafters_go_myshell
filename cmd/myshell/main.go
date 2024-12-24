@@ -20,7 +20,7 @@ func parseInput(input string) ([]string, map[string]string, error) {
     escapeNext := false
     redirects := make(map[string]string)
 
-    for _, char := range input {
+    for i, char := range input {
         if escapeNext {
             if inDoubleQuote && (char == '"' || char == '\\' || char == '$' || char == '\n') {
                 currentArg.WriteRune(char)
@@ -62,15 +62,12 @@ func parseInput(input string) ([]string, map[string]string, error) {
                 args = append(args, currentArg.String())
                 currentArg.Reset()
             }
-            if len(args) > 0 {
-                if len(input) > 1 && input[1] == '1' {
-                    redirects["stdout"] = input[2:]
-                } else if len(input) > 1 && input[1] == '2' {
-                    redirects["stderr"] = input[2:]
-                } else {
-                    redirects["stdout"] = input[1:]
-                }
-                break
+            if i+1 < len(input) && input[i+1] == '1' {
+                redirects["stdout"] = strings.TrimSpace(input[i+2:])
+            } else if i+1 < len(input) && input[i+1] == '2' {
+                redirects["stderr"] = strings.TrimSpace(input[i+2:])
+            } else {
+                redirects["stdout"] = strings.TrimSpace(input[i+1:])
             }
         default:
             currentArg.WriteRune(char)
