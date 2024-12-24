@@ -54,7 +54,7 @@ func parseInput(input string) ([]string, map[string]string, error) {
                 }
                 if i > 0 && input[i-1] == '1' {
                     redirects["stdout"] = targetFile
-                    i-- // Skip the '1' character
+                    i++ // Skip the '1' character
                 } else {
                     redirects["stdout"] = targetFile
                 }
