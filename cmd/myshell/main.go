@@ -70,7 +70,6 @@ func parseInput(input string) ([]string, map[string]string, error) {
             } else {
                 redirects["stdout"] = strings.TrimSpace(input[i+1:])
             }
-            break
         default:
             currentArg.WriteRune(char)
         }
