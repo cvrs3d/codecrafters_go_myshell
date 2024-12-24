@@ -2,22 +2,24 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
-	"strings"
-	"errors"
 	"path/filepath"
-	"io"
+	"reflect"
+	"strings"
 )
 
 // parseInput handles input string and works with ''
-func parseInput(input string) ([]string, error) {
+func parseInput(input string) ([]string, map[string]string, error) {
     var args []string
     var currentArg strings.Builder
     inSingleQuote := false
     inDoubleQuote := false
     escapeNext := false
+    redirects := make(map[string]string)
 
     for _, char := range input {
         if escapeNext {
@@ -56,20 +58,35 @@ func parseInput(input string) ([]string, error) {
                 args = append(args, currentArg.String())
                 currentArg.Reset()
             }
+        case char == '>':
+            if currentArg.Len() > 0 {
+                args = append(args, currentArg.String())
+                currentArg.Reset()
+            }
+            if len(args) > 0 {
+                if len(input) > 1 && input[1] == '1' {
+                    redirects["stdout"] = input[2:]
+                } else if len(input) > 1 && input[1] == '2' {
+                    redirects["stderr"] = input[2:]
+                } else {
+                    redirects["stdout"] = input[1:]
+                }
+                break
+            }
         default:
             currentArg.WriteRune(char)
         }
     }
 
     if inSingleQuote || inDoubleQuote {
-        return nil, errors.New("parse error: mismatched quotes")
+        return nil, nil, errors.New("parse error: mismatched quotes")
     }
 
     if currentArg.Len() > 0 {
         args = append(args, currentArg.String())
     }
 
-    return args, nil
+    return args, redirects, nil
 }
 
 // Checks if command is a builtin
@@ -132,7 +149,7 @@ func handleTypeCmd(args []string) error {
 }
 
 // Executes new command
-func executeCommand(args []string) error {
+func executeCommand(args []string, redirects map[string]string) error {
     if len(args) == 0 {
         return errors.New("no command provided")
     }
@@ -150,8 +167,26 @@ func executeCommand(args []string) error {
     cmd.Stderr = os.Stderr
     cmd.Stdin = os.Stdin
 
+    if outFile, ok := redirects["stdout"]; ok {
+        out, err := os.Create(outFile)
+        if err != nil {
+            return fmt.Errorf("failed to open stdout file: %v", err)
+        }
+        defer out.Close()
+        cmd.Stdout = out
+    }
+
+    if errFile, ok := redirects["stderr"]; ok {
+        errOut, err := os.Create(errFile)
+        if err != nil {
+            return fmt.Errorf("failed to open stderr file: %v", err)
+        }
+        defer errOut.Close()
+        cmd.Stderr = errOut
+    }
+
     if err := cmd.Run(); err != nil {
-        return fmt.Errorf("%s: command not found", command)
+        return fmt.Errorf("failed to execute command: %v", err)
     }
 
     return nil
@@ -250,7 +285,7 @@ func main() {
             break
         }
 
-        args, err := parseInput(usrInput)
+        args, redirects, err := parseInput(usrInput)
         if err != nil {
             fmt.Println(err)
             continue
@@ -283,7 +318,7 @@ func main() {
                 fmt.Fprintln(os.Stdout, err)
             }
         default:
-            if err := executeCommand(append([]string{command}, args...)); err != nil {
+            if err := executeCommand(append([]string{command}, args...), redirects); err != nil {
             fmt.Fprintln(os.Stdout, err)
             }
         }
