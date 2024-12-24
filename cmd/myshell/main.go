@@ -58,6 +58,7 @@ func parseInput(input string) ([]string, map[string]string, error) {
                 } else {
                     redirects["stdout"] = targetFile
                 }
+                return args, redirects, nil
             } else {
                 currentArg.WriteByte(char)
             }
@@ -85,7 +86,6 @@ func parseInput(input string) ([]string, map[string]string, error) {
 
     return args, redirects, nil
 }
-
 // Checks if command is a builtin
 func isBuiltin(command string) bool {
     builtins := map[string]bool{
@@ -208,11 +208,22 @@ func handleCd(input string) error {
 }
 
 // handleEcho works with echo
-func handleEcho(args []string) {
-    if len(args) > 0 {
-        // Print joined args space-separated
-        fmt.Println(strings.Join(args, " "))
+func handleEcho(args []string, redirects map[string]string) error {
+    output := strings.Join(args, " ")
+    if stdoutFile, ok := redirects["stdout"]; ok {
+        file, err := os.OpenFile(stdoutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+        if err != nil {
+            return fmt.Errorf("failed to open file for stdout redirection: %v", err)
+        }
+        defer file.Close()
+        _, err = file.WriteString(output + "\n")
+        if err != nil {
+            return fmt.Errorf("failed to write to file: %v", err)
+        }
+    } else {
+        fmt.Println(output)
     }
+    return nil
 }
 
 // handleCat stands for cat builtin
@@ -277,7 +288,7 @@ func main() {
         case "type":
             err = handleTypeCmd(args)
         case "echo":
-            handleEcho(args)
+            err = handleEcho(args, redirects)
         case "cat":
             err = handleCat(args)
         case "pwd":
