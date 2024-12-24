@@ -13,77 +13,78 @@ import (
 
 // parseInput handles input string and works with ''
 func parseInput(input string) ([]string, map[string]string, error) {
-	args := []string{}
-	redirects := make(map[string]string)
-	var currentArg strings.Builder
-	inSingleQuote, inDoubleQuote, escapeNext := false, false, false
+    args := []string{}
+    redirects := make(map[string]string)
+    var currentArg strings.Builder
+    inSingleQuote, inDoubleQuote, escapeNext := false, false, false
 
-	for i := 0; i < len(input); i++ {
-		char := input[i]
+    for i := 0; i < len(input); i++ {
+        char := input[i]
 
-		if escapeNext {
-			currentArg.WriteByte(char)
-			escapeNext = false
-			continue
-		}
+        if escapeNext {
+            currentArg.WriteByte(char)
+            escapeNext = false
+            continue
+        }
 
-		switch char {
-		case '\\':
-			escapeNext = true
-		case '\'':
-			if !inDoubleQuote {
-				inSingleQuote = !inSingleQuote
-			} else {
-				currentArg.WriteByte(char)
-			}
-		case '"':
-			if !inSingleQuote {
-				inDoubleQuote = !inDoubleQuote
-			} else {
-				currentArg.WriteByte(char)
-			}
-		case '>':
-			if !inSingleQuote && !inDoubleQuote {
-				if currentArg.Len() > 0 {
-					args = append(args, currentArg.String())
-					currentArg.Reset()
-				}
-				targetFile := strings.TrimSpace(input[i+1:])
-				if len(targetFile) == 0 {
-					return nil, nil, errors.New("parse error: no file specified for redirection")
-				}
-				if i > 0 && input[i-1] == '1' {
-					redirects["stdout"] = targetFile
-				} else {
-					redirects["stdout"] = targetFile
-				}
-				return args, redirects, nil
-			} else {
-				currentArg.WriteByte(char)
-			}
-		case ' ':
-			if !inSingleQuote && !inDoubleQuote {
-				if currentArg.Len() > 0 {
-					args = append(args, currentArg.String())
-					currentArg.Reset()
-				}
-			} else {
-				currentArg.WriteByte(char)
-			}
-		default:
-			currentArg.WriteByte(char)
-		}
-	}
+        switch char {
+        case '\\':
+            escapeNext = true
+        case '\'':
+            if !inDoubleQuote {
+                inSingleQuote = !inSingleQuote
+            } else {
+                currentArg.WriteByte(char)
+            }
+        case '"':
+            if !inSingleQuote {
+                inDoubleQuote = !inDoubleQuote
+            } else {
+                currentArg.WriteByte(char)
+            }
+        case '>':
+            if !inSingleQuote && !inDoubleQuote {
+                if currentArg.Len() > 0 {
+                    args = append(args, currentArg.String())
+                    currentArg.Reset()
+                }
+                targetFile := strings.TrimSpace(input[i+1:])
+                if len(targetFile) == 0 {
+                    return nil, nil, errors.New("parse error: no file specified for redirection")
+                }
+                if i > 0 && input[i-1] == '1' {
+                    redirects["stdout"] = targetFile
+                    i-- // Skip the '1' character
+                } else {
+                    redirects["stdout"] = targetFile
+                }
+                return args, redirects, nil
+            } else {
+                currentArg.WriteByte(char)
+            }
+        case ' ':
+            if !inSingleQuote && !inDoubleQuote {
+                if currentArg.Len() > 0 {
+                    args = append(args, currentArg.String())
+                    currentArg.Reset()
+                }
+            } else {
+                currentArg.WriteByte(char)
+            }
+        default:
+            currentArg.WriteByte(char)
+        }
+    }
 
-	if inSingleQuote || inDoubleQuote {
-		return nil, nil, errors.New("parse error: mismatched quotes")
-	}
+    if inSingleQuote || inDoubleQuote {
+        return nil, nil, errors.New("parse error: mismatched quotes")
+    }
 
-	if currentArg.Len() > 0 {
-		args = append(args, currentArg.String())
-	}
+    if currentArg.Len() > 0 {
+        args = append(args, currentArg.String())
+    }
 
-	return args, redirects, nil
+    return args, redirects, nil
 }
 
 // Checks if command is a builtin
