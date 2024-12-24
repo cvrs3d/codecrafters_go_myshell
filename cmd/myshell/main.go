@@ -58,7 +58,6 @@ func parseInput(input string) ([]string, map[string]string, error) {
                 } else {
                     redirects["stdout"] = targetFile
                 }
-                return args, redirects, nil
             } else {
                 currentArg.WriteByte(char)
             }
