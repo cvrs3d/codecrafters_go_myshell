@@ -159,31 +159,27 @@ func executeCommand(args []string, redirects map[string]string) error {
 
     cmd := exec.Command(path, args[1:]...)
 
-    // Redirecting channels
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-    cmd.Stdin = os.Stdin
-
-    if outFile, ok := redirects["stdout"]; ok {
-        out, err := os.Create(outFile)
+    // Handle redirections
+    if stdoutFile, ok := redirects["stdout"]; ok {
+        file, err := os.OpenFile(stdoutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
         if err != nil {
-            return fmt.Errorf("failed to open stdout file: %v", err)
+            return fmt.Errorf("failed to open file for stdout redirection: %v", err)
         }
-        defer out.Close()
-        cmd.Stdout = out
+        defer file.Close()
+        cmd.Stdout = file
     }
 
-    if errFile, ok := redirects["stderr"]; ok {
-        errOut, err := os.Create(errFile)
+    if stderrFile, ok := redirects["stderr"]; ok {
+        file, err := os.OpenFile(stderrFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
         if err != nil {
-            return fmt.Errorf("failed to open stderr file: %v", err)
+            return fmt.Errorf("failed to open file for stderr redirection: %v", err)
         }
-        defer errOut.Close()
-        cmd.Stderr = errOut
+        defer file.Close()
+        cmd.Stderr = file
     }
 
     if err := cmd.Run(); err != nil {
-        return fmt.Errorf("failed to execute command: %v", err)
+        return fmt.Errorf("command execution failed: %v", err)
     }
 
     return nil
