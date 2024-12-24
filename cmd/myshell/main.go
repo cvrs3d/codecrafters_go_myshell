@@ -59,8 +59,7 @@ func parseInput(input string) ([]string, map[string]string, error) {
                     args = append(args, currentArg.String())
                     currentArg.Reset()
                 }
-                if i > 0 && input[i-1] == '1' {
-                    if i+1 < len(input) && input[i+1] == '>' {
+                if i+1 < len(input) && input[i+1] == '>' {
                         i++
                         redirects["stdout_append"] = strings.TrimSpace(input[i+2:])
                     } else {
@@ -70,6 +69,20 @@ func parseInput(input string) ([]string, map[string]string, error) {
                     i++
                     redirects["stdout_append"] = strings.TrimSpace(input[i+2:])
                 } else {
+                    redirects["stdout"] = strings.TrimSpace(input[i+1:])
+                }
+                return args, redirects, nil
+        case '1':
+            if !inSingleQuote && !inDoubleQuote && i+1 < len(input) && input[i+1] == '>' {
+                if currentArg.Len() > 0 {
+                    args = append(args, currentArg.String())
+                    currentArg.Reset()
+                }
+                if i+2 < len(input) && input[i+2] == '>' {
+                    i += 2
+                    redirects["stdout_append"] = strings.TrimSpace(input[i+2:])
+                } else {
+                    i++
                     redirects["stdout"] = strings.TrimSpace(input[i+1:])
                 }
                 return args, redirects, nil
